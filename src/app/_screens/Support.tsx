@@ -100,12 +100,12 @@ export function HelpScreen() {
             </div>
           ))}
 
-          <div style={{ marginTop: 24, padding: 16, background: "var(--md-sys-color-on-surface)", color: "#FFFFFF", borderRadius: 12 }}>
+          <div style={{ marginTop: 24, padding: 16, background: "var(--md-sys-color-on-surface)", color: "var(--md-sys-color-surface)", borderRadius: 12 }}>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 16 }}>Still stuck?</div>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", margin: "4px 0 12px" }}>Our ops team replies in under 5 minutes during waterfront hours.</p>
+            <p style={{ fontSize: 13, color: "var(--md-sys-color-surface)", opacity: 0.7, margin: "4px 0 12px" }}>Our ops team replies in under 5 minutes during waterfront hours.</p>
             <div style={{ display: "flex", gap: 8 }}>
-              <button className="btn btn-md btn-filled" style={{ background: "#FFFFFF", color: "var(--md-sys-color-on-surface)", flex: 1 }} onClick={() => toast("WhatsApp chat opened (prototype)")}>WhatsApp</button>
-              <button className="btn btn-md btn-outlined" style={{ color: "#FFFFFF", borderColor: "rgba(255,255,255,0.3)", flex: 1 }} onClick={() => toast("Calling ops (prototype)")}>Call</button>
+              <button className="btn btn-md btn-filled" style={{ background: "var(--md-sys-color-surface)", color: "var(--md-sys-color-on-surface)", flex: 1 }} onClick={() => toast("WhatsApp chat opened (prototype)")}>WhatsApp</button>
+              <button className="btn btn-md btn-outlined" style={{ color: "var(--md-sys-color-surface)", borderColor: "color-mix(in srgb, var(--md-sys-color-surface) 30%, transparent)", flex: 1 }} onClick={() => toast("Calling ops (prototype)")}>Call</button>
             </div>
           </div>
 

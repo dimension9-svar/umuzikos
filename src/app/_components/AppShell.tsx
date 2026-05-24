@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { AppProvider, useApp } from "./state";
+import { useEffect, useState } from "react";
+import { AppProvider, DEMO_USER, useApp } from "./state";
 import {
   SplashScreen,
   WelcomeScreen,
@@ -48,6 +48,28 @@ import {
   ScreensIndex,
 } from "../_screens/Support";
 
+type Theme = "light" | "dark";
+
+/* ───────────────────────── Theme hook ───────────────────────── */
+
+function useTheme(): [Theme, (t: Theme) => void] {
+  const [theme, setTheme] = useState<Theme>("light");
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem("umk-theme");
+    if (stored === "light" || stored === "dark") {
+      setTheme(stored);
+    } else if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
+      setTheme("dark");
+    }
+  }, []);
+  const set = (t: Theme) => {
+    setTheme(t);
+    try { window.localStorage.setItem("umk-theme", t); } catch {}
+  };
+  return [theme, set];
+}
+
 /* ───────────────────────── Status bar + tab bar ───────────────────────── */
 
 function StatusBar({ dark }: { dark?: boolean }) {
@@ -91,7 +113,6 @@ function TabBar() {
   const cartCount = cart.reduce((n, l) => n + l.qty, 0);
   const cartOrTracking = () => {
     if (activeOrder) navigate(`/order/${activeOrder.id}/track`);
-    else if (cartCount > 0) navigate("/cart");
     else navigate("/cart");
   };
   const Item = ({
@@ -186,12 +207,201 @@ function DeviceToaster() {
   );
 }
 
+/* ───────────────────────── Icons used in shell chrome ───────────────────────── */
+
+const SunIcon = () => (
+  <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <circle cx={12} cy={12} r={4} />
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+  </svg>
+);
+const MoonIcon = () => (
+  <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+  </svg>
+);
+const GridIcon = () => (
+  <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <rect x={3} y={3} width={7} height={7} rx={1} />
+    <rect x={14} y={3} width={7} height={7} rx={1} />
+    <rect x={3} y={14} width={7} height={7} rx={1} />
+    <rect x={14} y={14} width={7} height={7} rx={1} />
+  </svg>
+);
+const ResetIcon = () => (
+  <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+    <path d="M3 3v5h5" />
+  </svg>
+);
+const PlayIcon = () => (
+  <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="5 3 19 12 5 21 5 3" />
+  </svg>
+);
+const FastIcon = () => (
+  <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="13 17 18 12 13 7" />
+    <polyline points="6 17 11 12 6 7" />
+  </svg>
+);
+const MenuBars = () => (
+  <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+    <path d="M4 7h16M4 12h16M4 17h16" />
+  </svg>
+);
+const CloseIcon = () => (
+  <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+    <path d="M6 6l12 12M6 18L18 6" />
+  </svg>
+);
+
+/* ───────────────────────── Demo menu — items shared by desktop pills + drawer ───────────────────────── */
+
+function useDemoActions(closeAfter?: () => void) {
+  const { navigate, signIn, signOut, clearCart } = useApp();
+  const fire = (fn: () => void) => () => { fn(); closeAfter?.(); };
+  return {
+    goAllScreens: fire(() => navigate("/screens")),
+    goHome: fire(() => navigate("/home")),
+    restartOnboarding: fire(() => { signOut(); clearCart(); navigate("/splash"); }),
+    skipToHome: fire(() => { signIn(DEMO_USER); navigate("/home"); }),
+    advanceTracking: fire(() => {
+      // jump straight to the live-tracking demo: place a quick mock active order if none, then go
+      navigate("/order/UMK-20260520-0042/track");
+    }),
+  };
+}
+
+/* ───────────────────────── Drawer (mobile) ───────────────────────── */
+
+function NavDrawer({
+  open,
+  onClose,
+  theme,
+  setTheme,
+}: {
+  open: boolean;
+  onClose: () => void;
+  theme: Theme;
+  setTheme: (t: Theme) => void;
+}) {
+  const { user } = useApp();
+  const a = useDemoActions(onClose);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+  return (
+    <>
+      <div className="menu-scrim" onClick={onClose} />
+      <aside className="menu-drawer" role="dialog" aria-label="Demo controls">
+        <div className="menu-drawer-head">
+          <div>
+            <div className="title">UmuziKos · Prototype</div>
+            <h3>Demo controls</h3>
+          </div>
+          <button className="modal-close" onClick={onClose} aria-label="Close menu">
+            <CloseIcon />
+          </button>
+        </div>
+        <div className="menu-drawer-body">
+          <div className="menu-section">
+            <h4>Theme</h4>
+            <div className="theme-seg" role="tablist">
+              <button className={theme === "light" ? "is-active" : ""} onClick={() => setTheme("light")}>
+                <SunIcon /> Light
+              </button>
+              <button className={theme === "dark" ? "is-active" : ""} onClick={() => setTheme("dark")}>
+                <MoonIcon /> Dark
+              </button>
+            </div>
+          </div>
+
+          <div className="menu-section">
+            <h4>Navigate</h4>
+            <button className="menu-row" onClick={a.goAllScreens}>
+              <span className="ico"><GridIcon /></span>
+              <span className="body">
+                <div>All 32 screens</div>
+                <div className="sub">Index of every codex screen</div>
+              </span>
+            </button>
+            <button className="menu-row" onClick={a.goHome}>
+              <span className="ico">
+                <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 11l9-8 9 8M5 10v10h14V10" />
+                </svg>
+              </span>
+              <span className="body">
+                <div>Home</div>
+                <div className="sub">Skip to the home feed</div>
+              </span>
+            </button>
+            <button className="menu-row" onClick={a.advanceTracking}>
+              <span className="ico"><FastIcon /></span>
+              <span className="body">
+                <div>Jump to live tracking</div>
+                <div className="sub">A mock in-flight order (auto-advances)</div>
+              </span>
+            </button>
+          </div>
+
+          <div className="menu-section">
+            <h4>Session</h4>
+            {!user ? (
+              <button className="menu-row" onClick={a.skipToHome}>
+                <span className="ico"><PlayIcon /></span>
+                <span className="body">
+                  <div>Skip onboarding</div>
+                  <div className="sub">Sign in as Director Demo</div>
+                </span>
+              </button>
+            ) : (
+              <div className="menu-row" style={{ pointerEvents: "none" }}>
+                <span className="ico">
+                  <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx={12} cy={8} r={4} /><path d="M4 21a8 8 0 0 1 16 0" /></svg>
+                </span>
+                <span className="body">
+                  <div>{user.name}</div>
+                  <div className="sub">{user.phone}</div>
+                </span>
+              </div>
+            )}
+            <button className="menu-row" onClick={a.restartOnboarding}>
+              <span className="ico"><ResetIcon /></span>
+              <span className="body">
+                <div>Restart from splash</div>
+                <div className="sub">Sign out, clear cart, replay onboarding</div>
+              </span>
+            </button>
+          </div>
+
+          <div style={{ marginTop: 16, padding: 12, background: "var(--md-sys-color-surface-container)", borderRadius: 8, fontSize: 12, color: "var(--md-sys-color-on-surface-variant)", lineHeight: 1.5 }}>
+            Every screen has a shareable URL — copy the hash to send a teammate a direct link, e.g. <code style={{ fontSize: 11 }}>#/r/boesies</code>.
+          </div>
+        </div>
+      </aside>
+    </>
+  );
+}
+
 /* ───────────────────────── Screen router ───────────────────────── */
 
 function parseRoute(route: string) {
   const path = route.split("?")[0];
   const segs = path.split("/").filter(Boolean);
-  if (segs.length === 0) return { name: "home" };
+  if (segs.length === 0) return { name: "splash" };
   const [first, ...rest] = segs;
   switch (first) {
     case "splash": return { name: "splash" };
@@ -280,7 +490,6 @@ function ShouldShowTabs(route: string) {
 }
 
 function ShouldShowStatusBar(route: string) {
-  // Hide on splash (it has its own dark style merged into the splash bg)
   return !route.startsWith("/splash");
 }
 
@@ -290,19 +499,28 @@ function StatusDark(route: string) {
 
 /* ───────────────────────── Outer shell ───────────────────────── */
 
-function ShellInner() {
-  const { route, navigate } = useApp();
+function ShellInner({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void }) {
+  const { route } = useApp();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const a = useDemoActions();
+
   const showTabs = ShouldShowTabs(route);
   const showStatus = ShouldShowStatusBar(route);
   const statusDark = StatusDark(route);
 
   return (
-    <div className="stage">
+    <div className={`stage${theme === "dark" ? " dark" : ""}`}>
       <div className="stage-header">
         <span className="badge-dot">U</span>
         <span>UmuziKos</span>
         <span className="muted-tag">CUSTOMER APP · PROTOTYPE</span>
       </div>
+
+      {/* Mobile-only: top-right drawer trigger */}
+      <button className="menu-trigger" onClick={() => setMenuOpen(true)} aria-label="Open demo menu">
+        <MenuBars />
+        <span>Menu</span>
+      </button>
 
       <div className="device" aria-label="UmuziKos customer app prototype">
         <div className="device-inner">
@@ -317,32 +535,36 @@ function ShellInner() {
         </div>
       </div>
 
+      {/* Desktop-only: bottom-right pills (hidden on mobile via CSS) */}
       <div className="demo-controls">
-        <button className="demo-btn secondary" onClick={() => navigate("/screens")} aria-label="All screens">
-          <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <rect x={3} y={3} width={7} height={7} rx={1} />
-            <rect x={14} y={3} width={7} height={7} rx={1} />
-            <rect x={3} y={14} width={7} height={7} rx={1} />
-            <rect x={14} y={14} width={7} height={7} rx={1} />
-          </svg>
+        <div className="theme-seg desktop-theme">
+          <button className={theme === "light" ? "is-active" : ""} onClick={() => setTheme("light")} aria-label="Light mode">
+            <SunIcon />
+          </button>
+          <button className={theme === "dark" ? "is-active" : ""} onClick={() => setTheme("dark")} aria-label="Dark mode">
+            <MoonIcon />
+          </button>
+        </div>
+        <button className="demo-btn secondary" onClick={a.goAllScreens}>
+          <GridIcon />
           All screens
         </button>
-        <button className="demo-btn" onClick={() => navigate("/home")} aria-label="Reset to home">
-          <svg viewBox="0 0 24 24" width={14} height={14} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
-            <path d="M3 3v5h5" />
-          </svg>
-          Reset
+        <button className="demo-btn" onClick={a.restartOnboarding}>
+          <ResetIcon />
+          Restart
         </button>
       </div>
+
+      <NavDrawer open={menuOpen} onClose={() => setMenuOpen(false)} theme={theme} setTheme={setTheme} />
     </div>
   );
 }
 
 export function AppShell() {
+  const [theme, setTheme] = useTheme();
   return (
     <AppProvider>
-      <ShellInner />
+      <ShellInner theme={theme} setTheme={setTheme} />
     </AppProvider>
   );
 }

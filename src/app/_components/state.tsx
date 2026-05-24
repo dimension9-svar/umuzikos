@@ -138,7 +138,7 @@ export const useApp = () => {
 
 /* ───────────────────────── Defaults ───────────────────────── */
 
-const DEFAULT_USER: User = {
+export const DEMO_USER: User = {
   name: "Director Demo",
   phone: "+27 82 555 1234",
   email: "director@example.co.za",
@@ -279,7 +279,7 @@ const STATUS_FLOW_PICKUP: OrderStatus[] = [
 /* ───────────────────────── Provider ───────────────────────── */
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(DEFAULT_USER);
+  const [user, setUser] = useState<User | null>(null);
   const [addresses, setAddresses] = useState<Address[]>(DEFAULT_ADDRESSES);
   const [selectedAddressId, setSelectedAddressId] = useState<string>(DEFAULT_ADDRESSES[0].id);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(DEFAULT_PAYMENTS);
@@ -292,13 +292,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [route, setRoute] = useState<string>("/home");
 
-  /* hash router */
+  /* hash router — first visit (no hash) lands on /splash so the full
+     onboarding flow plays out; explicit deep-links are honoured. */
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (!window.location.hash) {
+      window.location.hash = "/splash";
+    }
     const apply = () => {
       const h = window.location.hash;
-      const path = h ? h.replace(/^#/, "") : "/home";
-      setRoute(path || "/home");
+      const path = h ? h.replace(/^#/, "") : "/splash";
+      setRoute(path || "/splash");
     };
     apply();
     window.addEventListener("hashchange", apply);

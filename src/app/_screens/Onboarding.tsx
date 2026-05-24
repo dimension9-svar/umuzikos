@@ -43,7 +43,7 @@ const WELCOME_STEPS = [
     sub: "Motorbike fleet, 8 km zone, honest ETAs. If we miss our delivery estimate by more than 5 minutes, delivery is on us.",
     alt: true,
     glyph: (
-      <svg viewBox="0 0 64 64" width={80} height={80} fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" style={{ color: "#FFFFFF" }}>
+      <svg viewBox="0 0 64 64" width={80} height={80} fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
         <circle cx={14} cy={48} r={8} />
         <circle cx={48} cy={48} r={8} />
         <path d="M14 48l8-18h12l8 18M22 30l-4-10h-6M42 30h6l4 10" />
