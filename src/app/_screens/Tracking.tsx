@@ -35,8 +35,8 @@ export function TrackingScreen({ orderId }: { orderId: string }) {
     );
   }
 
-  const flow = order.type === "pickup" ? PICKUP_FLOW : DELIVERY_FLOW;
-  const currentIdx = flow.indexOf(order.status as (typeof flow)[number]);
+  const flow: readonly string[] = order.type === "pickup" ? PICKUP_FLOW : DELIVERY_FLOW;
+  const currentIdx = flow.indexOf(order.status);
   const isDelivered = order.status === "delivered";
 
   return (
