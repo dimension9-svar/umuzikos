@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import "./wireframe.css";
 
 const outfit = Outfit({
   variable: "--font-outfit",
