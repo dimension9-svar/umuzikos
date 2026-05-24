@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import "./wireframe.css";
+import "./app.css";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -18,9 +18,9 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "UmuziKos — Lake Umuzi food, delivered.",
+  title: "UmuziKos — Customer App Prototype",
   description:
-    "Real local food from Secunda's best kitchens, delivered to Lake Umuzi Waterfront and across town in under 35 minutes.",
+    "Interactive prototype of the UmuziKos customer app — Lake Umuzi Waterfront delivery. Click-through of all 32 codex screens.",
 };
 
 export default function RootLayout({
