@@ -221,21 +221,49 @@ export function OtpScreen() {
   }, []);
 
   const onChange = (i: number, v: string) => {
-    const ch = v.replace(/\D/g, "").slice(-1);
-    const next = [...code];
-    next[i] = ch;
-    setCode(next);
+    const digits = v.replace(/\D/g, "");
+    // Paste case: distribute across cells starting at i
+    if (digits.length > 1) {
+      setCode((prev) => {
+        const next = [...prev];
+        for (let j = 0; j < digits.length && i + j < 6; j++) {
+          next[i + j] = digits[j];
+        }
+        return next;
+      });
+      const lastIdx = Math.min(i + digits.length - 1, 5);
+      const nextFocus = Math.min(lastIdx + 1, 5);
+      inputs.current[nextFocus]?.focus();
+      return;
+    }
+    const ch = digits.slice(-1);
+    setCode((prev) => {
+      const next = [...prev];
+      next[i] = ch;
+      return next;
+    });
     if (ch && i < 5) inputs.current[i + 1]?.focus();
   };
 
   const onKey = (i: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && !code[i] && i > 0) inputs.current[i - 1]?.focus();
+    if (e.key === "Backspace" && i > 0 && !e.currentTarget.value) {
+      e.preventDefault();
+      inputs.current[i - 1]?.focus();
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      submit();
+    }
+  };
+
+  const submit = () => {
+    signIn({ name: "Director Demo", phone: "+27 82 555 1234", email: "director@example.co.za" });
+    navigate("/home");
   };
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    signIn({ name: "Director Demo", phone: "+27 82 555 1234", email: "director@example.co.za" });
-    navigate("/home");
+    submit();
   };
 
   return (
@@ -244,7 +272,7 @@ export function OtpScreen() {
       <div className="screen-body">
         <div className="auth">
           <h1>Enter the code.</h1>
-          <p className="sub">We sent a 6-digit code to +27 82 555 1234. (Prototype: any 6 digits work.)</p>
+          <p className="sub">We sent a 6-digit code to +27 82 555 1234. (Prototype: any input works — tap Verify, paste a code, or just hit Enter.)</p>
 
           <form onSubmit={onSubmit}>
             <div className="otp-row">
@@ -277,9 +305,16 @@ export function OtpScreen() {
               type="submit"
               className="btn btn-lg btn-primary"
               style={{ width: "100%", marginTop: 8 }}
-              disabled={code.filter(Boolean).length < 6}
             >
               Verify &amp; continue
+            </button>
+            <button
+              type="button"
+              className="btn btn-md btn-text"
+              style={{ marginTop: 6, width: "100%" }}
+              onClick={submit}
+            >
+              Skip verification (prototype)
             </button>
           </form>
         </div>
